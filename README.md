@@ -67,6 +67,48 @@ shacl = Person.export_shacl()
 # Full SHACL shape with constraints from Pydantic field definitions
 ```
 
+### Named Graphs for Multiple Instances
+
+Create JSON-LD graphs containing multiple model instances:
+
+```python
+# LLM extracts multiple people from text
+people = [
+    Person(name="Alice", email="alice@example.com", age=30),
+    Person(name="Bob", email="bob@example.com", age=28)
+]
+
+# Export as named graph with metadata
+graph = Person.export_graph(
+    instances=people,
+    graph_id="team-dataset",
+    metadata={
+        "created": "2024-07-15T10:30:00Z",
+        "source": "llm-extraction",
+        "confidence": 0.95
+    }
+)
+# {
+#   "@context": {...},
+#   "@id": "team-dataset", 
+#   "@type": "Dataset",
+#   "@graph": [
+#     {"@id": "person-1", "name": "Alice", ...},
+#     {"@id": "person-2", "name": "Bob", ...}
+#   ],
+#   "created": "2024-07-15T10:30:00Z",
+#   "source": "llm-extraction"
+# }
+
+# Mixed-model graphs
+from pydantic_jsonld import export_mixed_graph
+mixed_graph = export_mixed_graph(
+    models=[person, product, sensor_reading],
+    graph_id="iot-ecosystem",
+    metadata={"domain": "IoT"}
+)
+```
+
 ## ⭐ Key Features
 
 ### Field Annotations with `Term()`
@@ -127,6 +169,12 @@ context = MyModel.export_context()
 
 # SHACL Shapes (with constraints from Pydantic fields)
 shapes = MyModel.export_shacl()
+
+# Named Graphs (multiple instances with metadata)
+graph = MyModel.export_graph(instances=[obj1, obj2], graph_id="dataset")
+
+# Mixed-model graphs
+mixed_graph = export_mixed_graph(models=[person, product], graph_id="mixed")
 
 # Standard JSON Schema (clean, no JSON-LD artifacts)
 schema = MyModel.model_json_schema()
@@ -218,6 +266,9 @@ pydantic-jsonld inspect myapp.models
 
 # Export specific models only
 pydantic-jsonld export-contexts myapp.models -m Person -m Product
+
+# Generate named graphs from datasets
+pydantic-jsonld export-graphs myapp.data --output-dir ./graphs
 ```
 
 ## ✅ Testing and Validation
@@ -271,11 +322,13 @@ jobs:
 - **🤖 LLM Applications**: Clean JSON for function calling while maintaining semantic meaning
 - **🕸️ Knowledge Graphs**: Generate contexts for RDF/semantic web integration  
 - **🔗 Data Integration**: Standardize data exchange between systems
+- **📊 Dataset Publishing**: Named graphs for organizing multiple model instances with provenance metadata
 - **🏥 Healthcare Systems**: Model clinical data with FHIR and HL7 compatibility
 - **🛒 E-commerce**: Product catalogs with Schema.org markup
-- **🔬 Research Data**: Scientific datasets with domain ontologies
-- **📡 IoT Platforms**: Sensor data with SOSA/SSN ontologies
+- **🔬 Research Data**: Scientific datasets with domain ontologies and graph-level metadata
+- **📡 IoT Platforms**: Sensor data with SOSA/SSN ontologies in temporal graph structures
 - **🎓 Educational Content**: Learning materials with educational ontologies
+- **🏢 Enterprise Data**: Mixed-model graphs combining people, products, and processes
 
 ## 📖 Documentation
 
@@ -309,11 +362,15 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ## 🚀 What's Next?
 
+- [x] Named graphs for multiple model instances ✅
+- [x] Mixed-model graphs with context merging ✅
+- [x] PyLD integration for standards compliance ✅
 - [ ] Support for more SHACL constraint types
 - [ ] Integration with popular graph databases
 - [ ] Visual context/shape editors
 - [ ] Performance optimizations for large schemas
 - [ ] Additional export formats (TTL, N-Triples, etc.)
+- [ ] Graph query helpers and SPARQL integration
 
 ---
 

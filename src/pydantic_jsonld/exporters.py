@@ -236,3 +236,100 @@ def _add_field_constraints(
             property_shape["sh:maxCount"] = field_info.max_length
         if hasattr(field_info, 'min_length') and field_info.min_length is not None:
             property_shape["sh:minCount"] = field_info.min_length
+
+
+def export_mixed_graph(
+    models: List[BaseModel],
+    graph_id: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """
+    Export multiple model instances of different types as a mixed JSON-LD graph.
+    
+    Args:
+        models: List of model instances (can be different types)
+        graph_id: IRI for the named graph
+        metadata: Optional metadata to include at graph level
+        
+    Returns:
+        Dictionary containing JSON-LD document with @graph structure
+    """
+    if not models:
+        raise ValueError("Cannot create graph from empty models list")
+    
+    # Generate graph ID if not provided
+    if graph_id is None:
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+        graph_id = f"mixed-graph-{timestamp}"
+    
+    # Collect all unique model classes
+    model_classes = list(set(type(model) for model in models))
+    
+    # Merge contexts from all model classes
+    merged_context = {}
+    remote_contexts = []
+    
+    for model_class in model_classes:
+        # Check if it's a JsonLDModel
+        if hasattr(model_class, 'export_context'):
+            context_doc = model_class.export_context()
+            context = context_doc["@context"]
+            
+            if isinstance(context, list):
+                # Handle array contexts
+                for item in context:
+                    if isinstance(item, str):
+                        # Remote context URL
+                        if item not in remote_contexts:
+                            remote_contexts.append(item)
+                    elif isinstance(item, dict):
+                        # Local context object - merge carefully
+                        for key, value in item.items():
+                            if key not in merged_context:
+                                merged_context[key] = value
+                            elif merged_context[key] != value:
+                                # Context conflict - use prefixed version
+                                class_name = model_class.__name__.lower()
+                                merged_context[f"{class_name}_{key}"] = value
+            elif isinstance(context, dict):
+                # Single context object
+                for key, value in context.items():
+                    if key not in merged_context:
+                        merged_context[key] = value
+                    elif merged_context[key] != value:
+                        # Context conflict - use prefixed version
+                        class_name = model_class.__name__.lower()
+                        merged_context[f"{class_name}_{key}"] = value
+    
+    # Build final context
+    if remote_contexts:
+        final_context = remote_contexts + [merged_context]
+    else:
+        final_context = merged_context
+    
+    # Build graph items
+    graph_items = []
+    for model in models:
+        if hasattr(model, 'model_dump'):
+            # Pydantic model
+            item_data = model.model_dump(by_alias=True)
+        else:
+            # Fallback for non-Pydantic models
+            item_data = dict(model) if hasattr(model, '__iter__') else model
+        
+        graph_items.append(item_data)
+    
+    # Build the graph document
+    graph_doc: Dict[str, Any] = {
+        "@context": final_context,
+        "@id": graph_id,
+        "@type": "Dataset",
+        "@graph": graph_items
+    }
+    
+    # Add metadata if provided
+    if metadata:
+        graph_doc.update(metadata)
+    
+    return graph_doc

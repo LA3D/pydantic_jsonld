@@ -12,6 +12,7 @@ This directory contains comprehensive examples demonstrating how to use pydantic
 ### Advanced Examples
 
 - **[pyld_validation_example.py](./pyld_validation_example.py)** - JSON-LD validation using PyLD processor
+- **[named_graphs_example.py](./named_graphs_example.py)** - Named graphs and LLM → JSON-LD workflows
 
 ## Running Examples
 
@@ -26,6 +27,9 @@ uv run python examples.py
 
 # PyLD validation and processing
 uv run python pyld_validation_example.py
+
+# Named graphs and LLM workflows
+uv run python named_graphs_example.py
 ```
 
 ## Example Categories
@@ -54,6 +58,14 @@ uv run python pyld_validation_example.py
 - Round-trip testing
 - Context merging
 - Error handling and edge cases
+
+### 4. Named Graphs (`named_graphs_example.py`)
+- LLM function calling → JSON-LD graph workflow
+- Same-model graphs with auto-generated IDs
+- Mixed-model graphs with context merging
+- Large dataset performance demonstration
+- Graph metadata patterns (provenance, quality, dataset description)
+- Production-ready examples
 
 ## Key Concepts Demonstrated
 

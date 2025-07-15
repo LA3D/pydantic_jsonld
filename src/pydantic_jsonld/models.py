@@ -15,6 +15,13 @@ class JsonLDFieldInfo(FieldInfo):
     """Extended FieldInfo that can store JSON-LD metadata."""
     
     def __init__(self, jsonld_meta: Dict[str, Any], **kwargs: Any):
+        # Store in both places for compatibility
+        metadata = kwargs.get('metadata', {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+        metadata[_JSONLD_META_KEY] = jsonld_meta
+        kwargs['metadata'] = metadata
+        
         super().__init__(**kwargs)
         self.jsonld_meta = jsonld_meta
 
@@ -167,3 +174,74 @@ class JsonLDModel(BaseModel):
         # This will be implemented in a separate file
         from .exporters import export_shacl
         return export_shacl(cls)
+    
+    @classmethod
+    def export_graph(
+        cls,
+        instances: List["JsonLDModel"],
+        graph_id: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        auto_id_pattern: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Export multiple model instances as a named JSON-LD graph.
+        
+        Args:
+            instances: List of model instances to include in the graph
+            graph_id: IRI for the named graph. If None, generates one based on class name
+            metadata: Optional metadata to include at graph level (created, source, etc.)
+            auto_id_pattern: Pattern for auto-generating @id values (e.g., "item-{index}")
+            
+        Returns:
+            Dictionary containing JSON-LD document with @graph structure
+        """
+        if not instances:
+            raise ValueError("Cannot create graph from empty instances list")
+        
+        # Validate all instances are of the same type as this class
+        for instance in instances:
+            if not isinstance(instance, cls):
+                raise ValueError(f"All instances must be of type {cls.__name__}, got {type(instance).__name__}")
+        
+        # Generate graph ID if not provided
+        if graph_id is None:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            graph_id = f"{cls.__name__}-graph-{timestamp}"
+        
+        # Get the context from the class
+        context_doc = cls.export_context()
+        context = context_doc["@context"]
+        
+        # Build the graph items
+        graph_items = []
+        for i, instance in enumerate(instances):
+            # Get instance data with aliases
+            item_data = instance.model_dump(by_alias=True)
+            
+            # Auto-generate @id if not present and pattern provided
+            if "@id" not in item_data and auto_id_pattern:
+                item_data["@id"] = auto_id_pattern.format(index=i+1, **item_data)
+            
+            graph_items.append(item_data)
+        
+        # Build the graph document
+        graph_doc: Dict[str, Any] = {
+            "@context": context,
+            "@id": graph_id,
+            "@type": "Dataset",
+            "@graph": graph_items
+        }
+        
+        # Add metadata if provided
+        if metadata:
+            graph_doc.update(metadata)
+        
+        # Validate the result if we have pyld available
+        try:
+            from .validation import validate_context
+            validate_context({"@context": context})
+        except ImportError:
+            pass  # Validation is optional
+        
+        return graph_doc
