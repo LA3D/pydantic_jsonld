@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
-    {name = "CRC Research", email = "info@crcresearch.com"},
+    {name = "University of Notre Dame"},
 ]
 keywords = ["pydantic", "json-ld", "shacl", "semantic-web", "linked-data"]
 classifiers = [
