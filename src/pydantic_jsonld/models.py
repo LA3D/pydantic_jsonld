@@ -124,6 +124,10 @@ class JsonLDModel(BaseModel):
             # Use alias if available, otherwise field name
             term_name = field_info.alias or field_name
             
+            # Skip JSON-LD keywords - they shouldn't be redefined in context
+            if term_name.startswith("@"):
+                continue
+            
             # Build term definition
             term_def: Dict[str, Any] = {"@id": jsonld_meta["iri"]}
             

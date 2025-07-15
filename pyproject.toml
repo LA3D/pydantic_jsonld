@@ -30,6 +30,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "pytest>=8.4.1",
     "typing-extensions>=4.0.0",
+    "pyld>=2.0.0",
 ]
 
 [project.optional-dependencies]

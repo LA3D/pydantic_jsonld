@@ -5,17 +5,17 @@ Generate JSON-LD contexts and SHACL shapes from Pydantic models while keeping yo
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## <Ø Why Pydantic JSON-LD?
+## ü§î Why Pydantic JSON-LD?
 
 Modern applications often need to work with both **LLMs** (which expect clean JSON) and **semantic web** technologies (which need JSON-LD contexts). This package lets you:
 
--  **Define once, use everywhere**: Single Pydantic models for both use cases
--  **Clean JSON for LLMs**: No JSON-LD pollution in your model JSON output
--  **Rich semantics**: Export separate JSON-LD contexts and SHACL shapes
--  **Standards compliant**: Generate valid JSON-LD and SHACL automatically
--  **Type safe**: Full type hints and validation throughout
+-  **Define once, use everywhere**: Single Pydantic models for both use cases
+-  **Clean JSON for LLMs**: No JSON-LD pollution in your model JSON output
+-  **Rich semantics**: Export separate JSON-LD contexts and SHACL shapes
+-  **Standards compliant**: Generate valid JSON-LD and SHACL automatically
+-  **Type safe**: Full type hints and validation throughout
 
-## =Ä Quick Start
+## üöÄ Quick Start
 
 ### Installation
 
@@ -67,7 +67,7 @@ shacl = Person.export_shacl()
 # Full SHACL shape with constraints from Pydantic field definitions
 ```
 
-## <◊ Key Features
+## ‚≠ê Key Features
 
 ### Field Annotations with `Term()`
 
@@ -132,7 +132,7 @@ shapes = MyModel.export_shacl()
 schema = MyModel.model_json_schema()
 ```
 
-## =÷ Advanced Examples
+## üìö Advanced Examples
 
 ### Scientific Research Paper
 
@@ -202,7 +202,7 @@ Product.configure_jsonld(
 )
 ```
 
-## =‡ Command Line Interface
+## üîß Command Line Interface
 
 Export contexts and SHACL shapes from your models using the CLI:
 
@@ -220,7 +220,7 @@ pydantic-jsonld inspect myapp.models
 pydantic-jsonld export-contexts myapp.models -m Person -m Product
 ```
 
-## >Í Testing and Validation
+## ‚úÖ Testing and Validation
 
 The package includes comprehensive validation to ensure your contexts are valid JSON-LD:
 
@@ -230,15 +230,15 @@ from pydantic_jsonld.validation import validate_context
 # Contexts are automatically validated on export
 try:
     context = MyModel.export_context()
-    print(" Context is valid JSON-LD")
+    print("‚úì Context is valid JSON-LD")
 except ValueError as e:
-    print(f"L Invalid context: {e}")
+    print(f"‚úó Invalid context: {e}")
 
 # Manual validation
 validate_context({"@context": {"name": {"@id": "schema:name"}}})
 ```
 
-## <◊ Integration with CI/CD
+## üîÑ Integration with CI/CD
 
 Automate context generation in your workflows:
 
@@ -266,25 +266,25 @@ jobs:
           git push
 ```
 
-## < Real-World Use Cases
+## üåü Real-World Use Cases
 
-- **> LLM Applications**: Clean JSON for function calling while maintaining semantic meaning
-- **= Knowledge Graphs**: Generate contexts for RDF/semantic web integration  
-- **=  Data Integration**: Standardize data exchange between systems
-- **<Â Healthcare Systems**: Model clinical data with FHIR and HL7 compatibility
-- **=“ E-commerce**: Product catalogs with Schema.org markup
-- **=, Research Data**: Scientific datasets with domain ontologies
-- **<Ì IoT Platforms**: Sensor data with SOSA/SSN ontologies
-- **=⁄ Educational Content**: Learning materials with educational ontologies
+- **ü§ñ LLM Applications**: Clean JSON for function calling while maintaining semantic meaning
+- **üï∏Ô∏è Knowledge Graphs**: Generate contexts for RDF/semantic web integration  
+- **üîó Data Integration**: Standardize data exchange between systems
+- **üè• Healthcare Systems**: Model clinical data with FHIR and HL7 compatibility
+- **üõí E-commerce**: Product catalogs with Schema.org markup
+- **üî¨ Research Data**: Scientific datasets with domain ontologies
+- **üì° IoT Platforms**: Sensor data with SOSA/SSN ontologies
+- **üéì Educational Content**: Learning materials with educational ontologies
 
-## =⁄ Documentation
+## üìñ Documentation
 
 - **[API Reference](./docs/api.md)** - Complete API documentation
 - **[Extended Examples](./examples.py)** - Real-world examples across domains
 - **[Migration Guide](./docs/migration.md)** - Upgrading from other JSON-LD libraries
 - **[Best Practices](./docs/best-practices.md)** - Patterns and recommendations
 
-## > Contributing
+## ü§ù Contributing
 
 We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
 
@@ -297,17 +297,17 @@ pip install -e ".[dev]"
 pytest
 ```
 
-## =ƒ License
+## üìÑ License
 
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
 
-## =O Acknowledgments
+## üôè Acknowledgments
 
 - **Pydantic** - For the excellent validation library this builds upon
 - **JSON-LD Community** - For the standards and specifications
 - **W3C** - For SHACL and semantic web standards
 
-## =Ä What's Next?
+## üöÄ What's Next?
 
 - [ ] Support for more SHACL constraint types
 - [ ] Integration with popular graph databases
@@ -317,4 +317,4 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 ---
 
-**Made with d for the semantic web and AI communities**
+**Made with ‚ù§Ô∏è for the semantic web and AI communities**
