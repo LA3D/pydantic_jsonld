@@ -12,6 +12,7 @@ Modern applications often need to work with both **LLMs** (which expect clean JS
 -  **Define once, use everywhere**: Single Pydantic models for both use cases
 -  **Clean JSON for LLMs**: No JSON-LD pollution in your model JSON output
 -  **Rich semantics**: Export separate JSON-LD contexts and SHACL shapes
+-  **Cryptographic signatures**: W3C Data Integrity compliant Ed25519 signatures
 -  **Standards compliant**: Generate valid JSON-LD and SHACL automatically
 -  **Type safe**: Full type hints and validation throughout
 
@@ -65,6 +66,49 @@ print(context)
 # Generate SHACL shapes for validation
 shacl = Person.export_shacl()
 # Full SHACL shape with constraints from Pydantic field definitions
+```
+
+### Cryptographic Signatures (W3C Data Integrity)
+
+Sign your Pydantic models with Ed25519 cryptographic signatures for verification and provenance:
+
+```python
+from pydantic_jsonld import SignableJsonLDModel, generate_ed25519_keypair
+
+class Person(SignableJsonLDModel):
+    name: str = Term("schema:name")
+    email: str = Term("schema:email")
+    role: str = Term("schema:jobTitle")
+
+Person.configure_jsonld(
+    prefixes={"schema": "https://schema.org/"}
+)
+
+# Generate signing keys
+private_key, public_key = generate_ed25519_keypair()
+
+# Create and sign model
+person = Person(name="Alice", email="alice@example.com", role="Researcher")
+signed_doc = person.sign(private_key, verification_method="researcher-key-001")
+
+# Verify signature
+is_valid = Person.verify(signed_doc, public_key)
+# True - signature is cryptographically valid
+
+# Signed document includes W3C compliant proof:
+# {
+#   "@context": {...},
+#   "name": "Alice",
+#   "email": "alice@example.com", 
+#   "role": "Researcher",
+#   "proof": {
+#     "type": "Ed25519Signature2020",
+#     "created": "2025-07-15T14:30:00Z",
+#     "verificationMethod": "researcher-key-001",
+#     "proofPurpose": "assertionMethod",
+#     "proofValue": "eyJ0eXAiOiJKV1Q..."
+#   }
+# }
 ```
 
 ### Named Graphs for Multiple Instances
@@ -176,11 +220,59 @@ graph = MyModel.export_graph(instances=[obj1, obj2], graph_id="dataset")
 # Mixed-model graphs
 mixed_graph = export_mixed_graph(models=[person, product], graph_id="mixed")
 
+# Cryptographic signatures (W3C Data Integrity)
+signed_doc = MyModel.sign(private_key, verification_method="my-key")
+
 # Standard JSON Schema (clean, no JSON-LD artifacts)
 schema = MyModel.model_json_schema()
 ```
 
 ## 📚 Advanced Examples
+
+### Signed LLM Outputs for Agentic Workflows
+
+```python
+class LLMResponse(SignableJsonLDModel):
+    query: str = Term("ex:query")
+    response: str = Term("ex:response") 
+    model: str = Term("ex:model")
+    confidence: float = Term("ex:confidence", type_="xsd:decimal")
+    timestamp: str = Term("schema:dateCreated", type_="xsd:dateTime")
+
+LLMResponse.configure_jsonld(
+    prefixes={
+        "schema": "https://schema.org/",
+        "ex": "https://ai.example.org/vocab/",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    }
+)
+
+# Agent generates response
+agent_private_key, agent_public_key = generate_ed25519_keypair()
+llm_output = LLMResponse(
+    query="What are the benefits of renewable energy?",
+    response="Renewable energy reduces carbon emissions, provides energy independence...",
+    model="claude-3-5-sonnet-20241022",
+    confidence=0.92,
+    timestamp="2025-07-15T14:30:00Z"
+)
+
+# Sign for verification in downstream systems
+signed_output = llm_output.sign(
+    agent_private_key, 
+    verification_method="agent-001",
+    proof_purpose="assertionMethod"
+)
+
+# Downstream system verifies authenticity
+is_authentic = LLMResponse.verify(signed_output, agent_public_key)
+# True - cryptographically verified LLM output
+
+# Tamper detection
+signed_output["confidence"] = 0.99  # Modify confidence
+is_tampered = LLMResponse.verify(signed_output, agent_public_key)  
+# False - tampering detected
+```
 
 ### Scientific Research Paper
 
@@ -269,6 +361,9 @@ pydantic-jsonld export-contexts myapp.models -m Person -m Product
 
 # Generate named graphs from datasets
 pydantic-jsonld export-graphs myapp.data --output-dir ./graphs
+
+# Sign model instances (future feature)
+pydantic-jsonld sign myapp.models --key-file ./private.key
 ```
 
 ## ✅ Testing and Validation
@@ -320,12 +415,14 @@ jobs:
 ## 🌟 Real-World Use Cases
 
 - **🤖 LLM Applications**: Clean JSON for function calling while maintaining semantic meaning
+- **🔐 Agentic Workflows**: Cryptographically signed LLM outputs with verification chains
 - **🕸️ Knowledge Graphs**: Generate contexts for RDF/semantic web integration  
 - **🔗 Data Integration**: Standardize data exchange between systems
 - **📊 Dataset Publishing**: Named graphs for organizing multiple model instances with provenance metadata
+- **⚖️ Compliance & Auditing**: Tamper-evident records with cryptographic integrity
 - **🏥 Healthcare Systems**: Model clinical data with FHIR and HL7 compatibility
 - **🛒 E-commerce**: Product catalogs with Schema.org markup
-- **🔬 Research Data**: Scientific datasets with domain ontologies and graph-level metadata
+- **🔬 Research Data**: Scientific datasets with domain ontologies and cryptographic verification
 - **📡 IoT Platforms**: Sensor data with SOSA/SSN ontologies in temporal graph structures
 - **🎓 Educational Content**: Learning materials with educational ontologies
 - **🏢 Enterprise Data**: Mixed-model graphs combining people, products, and processes
@@ -365,6 +462,9 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 - [x] Named graphs for multiple model instances ✅
 - [x] Mixed-model graphs with context merging ✅
 - [x] PyLD integration for standards compliance ✅
+- [x] Cryptographic signatures (W3C Data Integrity Ed25519) ✅
+- [ ] BBS+ signatures for selective disclosure
+- [ ] CLI signature commands for workflows
 - [ ] Support for more SHACL constraint types
 - [ ] Integration with popular graph databases
 - [ ] Visual context/shape editors

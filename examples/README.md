@@ -13,6 +13,7 @@ This directory contains comprehensive examples demonstrating how to use pydantic
 
 - **[pyld_validation_example.py](./pyld_validation_example.py)** - JSON-LD validation using PyLD processor
 - **[named_graphs_example.py](./named_graphs_example.py)** - Named graphs and LLM → JSON-LD workflows
+- **[signed_models_example.py](./signed_models_example.py)** - Cryptographic signatures for agentic workflows
 
 ## Running Examples
 
@@ -30,6 +31,9 @@ uv run python pyld_validation_example.py
 
 # Named graphs and LLM workflows
 uv run python named_graphs_example.py
+
+# Cryptographic signatures for agentic workflows
+uv run python signed_models_example.py
 ```
 
 ## Example Categories
@@ -67,6 +71,14 @@ uv run python named_graphs_example.py
 - Graph metadata patterns (provenance, quality, dataset description)
 - Production-ready examples
 
+### 5. Cryptographic Signatures (`signed_models_example.py`)
+- W3C Data Integrity compliant Ed25519 signatures
+- LLM output verification for agentic workflows
+- Research data integrity and provenance
+- Multi-party key management patterns
+- Enterprise compliance and audit trails
+- Tamper detection and verification workflows
+
 ## Key Concepts Demonstrated
 
 ### Clean JSON for LLMs
@@ -91,6 +103,14 @@ validate_context_with_pyld(context)
 # Standards-compliant JSON-LD processing
 ```
 
+### Cryptographic Signatures
+```python
+# Sign models for verification
+signed_doc = model.sign(private_key)
+# Verify authenticity
+is_valid = Model.verify(signed_doc, public_key)
+```
+
 ## Prerequisites
 
 Basic examples require only pydantic-jsonld:
@@ -111,6 +131,7 @@ Each example produces:
 3. **JSON-LD Context** - Semantic web context
 4. **SHACL Shapes** - RDF validation shapes
 5. **N-Quads** - RDF triple representation (PyLD examples)
+6. **Signed Documents** - Cryptographically verified semantic data (signature examples)
 
 ## Best Practices Shown
 

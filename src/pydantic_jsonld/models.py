@@ -245,3 +245,148 @@ class JsonLDModel(BaseModel):
             pass  # Validation is optional
         
         return graph_doc
+
+
+class SignableJsonLDModel(JsonLDModel):
+    """
+    Extension of JsonLDModel with cryptographic signing capabilities.
+    
+    Supports Ed25519Signature2020 for W3C Data Integrity compliance.
+    """
+    
+    def sign(
+        self, 
+        private_key, 
+        verification_method: Optional[str] = None,
+        created: Optional[str] = None,
+        proof_purpose: str = "assertionMethod"
+    ) -> Dict[str, Any]:
+        """
+        Sign this model instance as a JSON-LD document.
+        
+        Args:
+            private_key: Ed25519PrivateKey instance or raw bytes
+            verification_method: Key identifier, auto-generated if None
+            created: ISO 8601 timestamp, defaults to current time
+            proof_purpose: Purpose of the proof
+            
+        Returns:
+            Signed JSON-LD document with embedded proof
+            
+        Raises:
+            ValueError: If signing fails
+        """
+        from .signatures import sign_jsonld_document
+        from .crypto_utils import private_key_from_bytes
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+        
+        # Convert bytes to private key if needed
+        if isinstance(private_key, bytes):
+            private_key = private_key_from_bytes(private_key)
+        elif not isinstance(private_key, Ed25519PrivateKey):
+            raise ValueError("private_key must be Ed25519PrivateKey or 32-byte bytes")
+        
+        # Export model as JSON-LD
+        context_doc = self.export_context()
+        context = context_doc["@context"]
+        
+        # Get model data with aliases
+        model_data = self.model_dump(by_alias=True)
+        
+        # Create JSON-LD document
+        document = {
+            "@context": context,
+            **model_data
+        }
+        
+        # Sign the document
+        return sign_jsonld_document(
+            document, 
+            private_key, 
+            verification_method, 
+            created, 
+            proof_purpose
+        )
+    
+    @classmethod
+    def verify(
+        cls, 
+        signed_document: Dict[str, Any], 
+        public_key
+    ) -> bool:
+        """
+        Verify a signed JSON-LD document.
+        
+        Args:
+            signed_document: JSON-LD document with embedded proof
+            public_key: Ed25519PublicKey instance or raw bytes
+            
+        Returns:
+            True if signature is valid, False otherwise
+        """
+        from .signatures import verify_jsonld_document
+        from .crypto_utils import public_key_from_bytes
+        from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+        
+        # Convert bytes to public key if needed
+        if isinstance(public_key, bytes):
+            public_key = public_key_from_bytes(public_key)
+        elif not isinstance(public_key, Ed25519PublicKey):
+            raise ValueError("public_key must be Ed25519PublicKey or 32-byte bytes")
+        
+        return verify_jsonld_document(signed_document, public_key)
+    
+    @classmethod
+    def extract_data(cls, signed_document: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Extract the original model data from a signed document.
+        
+        Args:
+            signed_document: JSON-LD document with embedded proof
+            
+        Returns:
+            Model data without proof or context
+        """
+        from .signatures import remove_proof
+        
+        # Remove proof
+        doc_without_proof = remove_proof(signed_document)
+        
+        # Remove context
+        data = doc_without_proof.copy()
+        if "@context" in data:
+            del data["@context"]
+        
+        return data
+    
+    @classmethod
+    def from_signed_document(cls, signed_document: Dict[str, Any]):
+        """
+        Create model instance from a signed document.
+        
+        Args:
+            signed_document: JSON-LD document with embedded proof
+            
+        Returns:
+            Model instance (proof is not preserved in instance)
+            
+        Note:
+            This extracts the data and creates a new model instance.
+            The cryptographic proof is not preserved in the instance.
+        """
+        data = cls.extract_data(signed_document)
+        return cls(**data)
+    
+    @staticmethod
+    def get_proof_metadata(signed_document: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Extract proof metadata from a signed document.
+        
+        Args:
+            signed_document: JSON-LD document with embedded proof
+            
+        Returns:
+            Proof metadata or None if no valid proof found
+        """
+        from .signatures import extract_proof_metadata
+        return extract_proof_metadata(signed_document)
