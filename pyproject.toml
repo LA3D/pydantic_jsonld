@@ -65,6 +65,7 @@ include = [
     "/tests",
     "/README.md",
     "/CLAUDE.md",
+    "/LICENSE",
 ]
 
 [tool.black]
